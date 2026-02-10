@@ -4,6 +4,7 @@
 
 `gitecho` (alias `ge`) is a "set-and-forget" utility that automatically mirrors your git pushes to other providers (GitLab, Bitbucket, Gitea, or custom servers) in the background.
 
+Mirrored at: https://gitlab.com/prashantsengar/gitecho
 
 
 ## Motivation
