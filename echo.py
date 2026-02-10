@@ -352,7 +352,7 @@ def status(short: bool = False):
         if short: console.print("x")
 
 @app.command()
-def logs(lines: int = 10):
+def logs(lines: int = typer.Argument(10)):
     """Show recent background activity."""
     if not LOG_FILE.exists():
         console.print("[dim]No logs yet.[/dim]")

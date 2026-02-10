@@ -23,10 +23,37 @@ My goal was an **Invisible Utility**: something you configure once per project a
 
 ### Recommended (uv)
 
-Isolate dependencies and keep your system clean.
+Install `uv` first: https://docs.astral.sh/uv/getting-started/installation/
+
+Then install `gitecho` in an isolated tool environment:
 ```bash
 uv tool install gitecho
 
+```
+
+For local development from this repository, prefer editable install so code changes are picked up immediately:
+
+```bash
+uv tool install --force --editable .
+```
+
+If you already installed from `--from .` and need a hard refresh:
+
+```bash
+uv tool install --force --reinstall --refresh --from . gitecho
+```
+
+If `ge` is not found after install, add `~/.local/bin` to your shell PATH:
+
+```bash
+source "$HOME/.local/bin/env"
+```
+
+To make this permanent on zsh:
+
+```bash
+echo 'source "$HOME/.local/bin/env"' >> ~/.zshrc
+source ~/.zshrc
 ```
 
 ### Standard (pip)
@@ -82,6 +109,11 @@ ge add git@gitlab.com:username/my-project.git
 
 *Output:* `✔ Linked echo-gitlab-com`
 
+If you upgraded `gitecho` and want to refresh the hook, run `ge add` again with the same URL.
+
+*Expected output (already linked case):* `Mirror already linked as <remote-name>.`
+Example: `Mirror already linked as echo-remote.`
+
 ### 2. The Workflow
 
 Just use git.
@@ -125,6 +157,12 @@ Since the tool is invisible, failures (like a down server) are silent to avoid i
 ```bash
 ge logs
 
+```
+
+Show more lines:
+
+```bash
+ge logs 30
 ```
 
 ### Origin Rejection Policy
