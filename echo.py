@@ -30,12 +30,13 @@ def log_event(message, level="INFO"):
         f.write(f"[{timestamp}] [{level}] {message}\n")
 
 # --- Helpers ---
-def get_git_root():
+def get_git_root(show_error: bool = True):
     try:
         repo = git.Repo(search_parent_directories=True)
         return repo
     except git.InvalidGitRepositoryError:
-        console.print("[bold red]Error:[/bold red] Not a git repository.")
+        if show_error:
+            console.print("[bold red]Error:[/bold red] Not a git repository.")
         raise typer.Exit(code=1)
 
 def is_mirror_remote(name: str) -> bool:
@@ -344,7 +345,7 @@ def sync(
 def status(short: bool = False):
     """Show mirror status. Use --short for prompts."""
     try:
-        repo = get_git_root()
+        repo = get_git_root(show_error=not short)
         mirrors = [r for r in repo.remotes if is_mirror_remote(r.name)]
         
         if short:
@@ -360,7 +361,11 @@ def status(short: bool = False):
                 console.print(f" • [cyan]{m.name}[/cyan] -> {m.url}")
             console.print(f"\n[dim]Logs: {LOG_FILE}[/dim]")
 
-    except:
+    except typer.Exit:
+        if short:
+            return
+        raise
+    except Exception:
         if short: console.print("x")
 
 @app.command()

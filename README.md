@@ -143,12 +143,15 @@ ge status
 
 Want to see if your repo is mirrored right in your prompt? Use the `--short` flag. It returns `✔` if active, `x` if error, or nothing.
 
-**Example (.zshrc):**
+**Example (.zshrc, basic prompt):**
 
 ```bash
-PROMPT="$PROMPT \$(ge status --short)"
+setopt PROMPT_SUBST
+PROMPT+=' $(command -v ge >/dev/null 2>&1 && ge status --short 2>/dev/null)'
 
 ```
+
+If you use Powerlevel10k, add a custom `gitecho` segment in `~/.p10k.zsh` instead of editing `PROMPT` directly.
 
 ### Logs
 
@@ -208,6 +211,3 @@ This removes the `pre-push` hook and deletes all `echo-*` remotes from the local
 
 * **Global Watch:** Automatically mirror every repo in a specific directory (e.g., `~/dev`).
 * **Auto-Creation:** Detect if the remote repo doesn't exist and create it via API automatically (skipping the "Create Project" step in the browser).
-
-
-
