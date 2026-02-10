@@ -11,3 +11,4 @@ dependencies = [
 
 [project.scripts]
 ge = "echo:app"
+gitecho = "echo:app"
