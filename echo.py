@@ -21,6 +21,7 @@ HOOK_MARKER_END = "# <<< gitecho hook end <<<"
 ZERO_SHA = "0" * 40
 ORIGIN_CONFIRM_TIMEOUT_SECONDS = 12
 CONTINUE_ON_ORIGIN_REJECT_ENV = "GITECHO_CONTINUE_ON_ORIGIN_REJECT"
+SKIP_HOOK_ENV = "GITECHO_SKIP_HOOK"
 
 def log_event(message, level="INFO"):
     """Appends a timestamped log entry."""
@@ -177,6 +178,7 @@ def push_with_fail_fast_auth(
     with repo.git.custom_environment(
         GIT_TERMINAL_PROMPT="0",
         GIT_SSH_COMMAND="ssh -oBatchMode=yes",
+        **{SKIP_HOOK_ENV: "1"},
     ):
         if all_refs:
             remote.push(all=True)
@@ -222,10 +224,17 @@ def install_hook(repo_path):
     cleaned = remove_gitecho_hook_block(existing).rstrip("\n")
     script_content = (
         f"{HOOK_MARKER_START}\n"
-        "if command -v ge >/dev/null 2>&1; then\n"
-        '    _ge_refs="$(mktemp "${TMPDIR:-/tmp}/gitecho-refs.XXXXXX")"\n'
-        '    cat > "$_ge_refs"\n'
-        f"    {hook_cmd} >> ~/.gitecho.log 2>&1 &\n"
+        f'if [ "${{{SKIP_HOOK_ENV}:-0}}" = "1" ]; then\n'
+        "    :\n"
+        "elif command -v ge >/dev/null 2>&1; then\n"
+        '    case "$1" in\n'
+        f'        "{REMOTE_PREFIX}"*) ;;\n'
+        '        *)\n'
+        '            _ge_refs="$(mktemp "${TMPDIR:-/tmp}/gitecho-refs.XXXXXX")"\n'
+        '            cat > "$_ge_refs"\n'
+        f"            {hook_cmd} >> ~/.gitecho.log 2>&1 &\n"
+        "            ;;\n"
+        "    esac\n"
         "fi\n"
         f"{HOOK_MARKER_END}\n"
     )
@@ -278,6 +287,9 @@ def sync(
     if bg:
         continue_on_reject = should_continue_on_origin_reject()
         log_event(f"Background sync started for {repo.working_dir}")
+        if is_mirror_remote(origin_remote):
+            log_event(f"Skipped sync for mirror-triggered push on {origin_remote}.")
+            return
         if ref_updates:
             confirmed = origin_updates_confirmed(repo, origin_remote, ref_updates)
             if not confirmed:
@@ -297,7 +309,7 @@ def sync(
                     return
             else:
                 log_event(f"Origin refs confirmed on {origin_remote}.")
-        elif not all:
+        elif refs_file is not None and not all:
             log_event("No ref updates were captured; falling back to default push behavior.", "WARN")
 
     for remote in mirrors:
