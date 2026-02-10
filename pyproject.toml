@@ -1,0 +1,13 @@
+[project]
+name = "gitecho"
+version = "0.1.0"
+description = "Dead simple, invisible git mirroring utility."
+requires-python = ">=3.9"
+dependencies = [
+    "typer",
+    "rich",
+    "gitpython"
+]
+
+[project.scripts]
+ge = "echo:app"
